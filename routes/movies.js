@@ -3,19 +3,48 @@ const router = express.Router();
 const movieController = require('../controllers/movieController');
 const auth = require('../middlewares/auth');
 
-// Ajout d'un film (privé)
+/**
+ * @swagger
+ * /api/movies:
+ *   post:
+ *     summary: Ajouter un film à sa watchlist
+ *     tags: [Movies]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               year:
+ *                 type: integer
+ *               genre:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: ["à voir", "vu"]
+ *               rating:
+ *                 type: integer
+ *                 minimum: 0
+ *                 maximum: 5
+ *               review:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Film ajouté
+ *       401:
+ *         description: Authentification requise
+ */
 router.post('/', auth, movieController.addMovie);
 
-// Voir ses propres films (privé)
 router.get('/', auth, movieController.getUserMovies);
 
-// Modifier un film (privé)
 router.put('/:id', auth, movieController.updateMovie);
 
-// Supprimer un film (privé)
 router.delete('/:id', auth, movieController.deleteMovie);
-
-// Top 10 public (pas besoin d'être connecté)
-router.get('/top10', movieController.getTop10);
 
 module.exports = router;
