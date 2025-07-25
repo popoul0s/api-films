@@ -1,0 +1,70 @@
+const Movie = require('../models/movie');
+
+// Ajouter un film
+exports.addMovie = async (req, res) => {
+    try {
+        const { title, year, genre, status, rating, review } = req.body;
+        const movie = new Movie({
+            user: req.user.userId,
+            title,
+            year,
+            genre,
+            status,
+            rating,
+            review
+        });
+        await movie.save();
+        res.status(201).json(movie);
+    } catch (err) {
+        res.status(500).json({ message: "Erreur à l'ajout du film.", error: err });
+    }
+};
+
+// Lire ses propres films
+exports.getUserMovies = async (req, res) => {
+    try {
+        const movies = await Movie.find({ user: req.user.userId });
+        res.json(movies);
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de la récupération des films.", error: err });
+    }
+};
+
+// Modifier un film (appartenant à l'utilisateur)
+exports.updateMovie = async (req, res) => {
+    try {
+        const movie = await Movie.findOneAndUpdate(
+            { _id: req.params.id, user: req.user.userId },
+            req.body,
+            { new: true }
+        );
+        if (!movie) return res.status(404).json({ message: "Film non trouvé." });
+        res.json(movie);
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de la modification du film.", error: err });
+    }
+};
+
+// Supprimer un film (appartenant à l'utilisateur)
+exports.deleteMovie = async (req, res) => {
+    try {
+        const movie = await Movie.findOneAndDelete({ _id: req.params.id, user: req.user.userId });
+        if (!movie) return res.status(404).json({ message: "Film non trouvé." });
+        res.json({ message: "Film supprimé." });
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de la suppression du film.", error: err });
+    }
+};
+
+// Top 10 public (tous utilisateurs)
+exports.getTop10 = async (req, res) => {
+    try {
+        const movies = await Movie.find({ status: 'vu', rating: { $ne: null } })
+            .sort({ rating: -1 })
+            .limit(10)
+            .select('title year genre rating review');
+        res.json(movies);
+    } catch (err) {
+        res.status(500).json({ message: "Erreur lors de la récupération du top 10.", error: err });
+    }
+};
